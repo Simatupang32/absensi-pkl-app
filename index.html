@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Absensi PKL</title>
+
+<!-- Ikon & tampilan saat dipasang di HP -->
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="theme-color" content="#1d4ed8">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Absensi PKL">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+
+<script>
+  /* ================================================================
+     GANTI dengan URL Web App Google Apps Script Anda (yang berakhiran /exec)
+     Apps Script > Deploy > Manage deployments > salin "Web app URL"
+     ================================================================ */
+  const APP_URL = 'https://script.google.com/macros/s/GANTI_DENGAN_ID_DEPLOYMENT/exec';
+</script>
+
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:#eef1f5;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+  #app{position:fixed;inset:0;width:100%;height:100%;border:0;
+       padding-top:env(safe-area-inset-top,0);background:#eef1f5}
+  #splash{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+          background:#fff;z-index:5;transition:opacity .35s}
+  #splash img{width:150px;height:150px}
+  #splash .t{margin-top:10px;font-weight:700;font-size:18px;color:#1e3a8a}
+  #splash .s{margin-top:6px;font-size:13px;color:#6b7280;text-align:center;padding:0 24px}
+  .spin{width:28px;height:28px;margin-top:18px;border:3px solid #dbeafe;border-top-color:#1d4ed8;border-radius:50%;animation:r 1s linear infinite}
+  @keyframes r{to{transform:rotate(360deg)}}
+  .btn{display:inline-block;margin-top:14px;padding:11px 18px;border-radius:10px;background:#1d4ed8;color:#fff;
+       text-decoration:none;font-weight:600;font-size:14px;border:0}
+  .btn.ghost{background:#e5e7eb;color:#111827}
+  #installBar{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0));z-index:6;
+     display:none;align-items:center;gap:10px;background:#fff;border-radius:14px;padding:10px 12px;
+     box-shadow:0 6px 24px rgba(0,0,0,.18);font-size:14px}
+  #installBar img{width:40px;height:40px;border-radius:9px}
+  #installBar .x{flex:1}
+  #installBar .btn{margin:0;padding:9px 14px}
+  #installBar .close{background:none;border:0;font-size:20px;color:#6b7280;cursor:pointer}
+  .hidden{display:none!important}
+</style>
+</head>
+<body>
+
+<div id="splash">
+  <img src="icons/logo.png" alt="Logo">
+  <div class="t">Absensi PKL</div>
+  <div class="s" id="splashMsg">Memuat aplikasi…</div>
+  <div class="spin" id="spin"></div>
+  <a id="btnDirect" class="btn hidden" href="#">Buka Aplikasi</a>
+</div>
+
+<iframe id="app" title="Absensi PKL"
+  allow="camera *; geolocation *; microphone *; clipboard-write *; fullscreen *"
+  allowfullscreen></iframe>
+
+<div id="installBar">
+  <img src="icons/icon-192.png" alt="">
+  <div class="x" id="installText"><b>Pasang Absensi PKL</b><br>Tambahkan ke layar utama HP</div>
+  <button class="btn" id="btnInstall">Pasang</button>
+  <button class="close" onclick="tutupInstall()" aria-label="Tutup">×</button>
+</div>
+
+<script>
+  const $ = id => document.getElementById(id);
+  const belumDiisi = APP_URL.indexOf('GANTI_DENGAN') >= 0;
+  $('btnDirect').href = APP_URL;
+
+  if (belumDiisi) {
+    $('spin').classList.add('hidden');
+    $('splashMsg').innerHTML = 'URL aplikasi belum diisi.<br>Buka <b>index.html</b> lalu ganti <b>APP_URL</b> dengan URL Web App Apps Script.';
+  } else {
+    const frame = $('app');
+    let loaded = false;
+    frame.addEventListener('load', () => {
+      loaded = true;
+      $('splash').style.opacity = '0';
+      setTimeout(() => $('splash').classList.add('hidden'), 400);
+    });
+    frame.src = APP_URL;
+    // Jika lama sekali / diblokir, tawarkan buka langsung
+    setTimeout(() => {
+      if (!loaded) {
+        $('splashMsg').textContent = 'Koneksi lambat atau aplikasi tidak bisa dimuat di sini.';
+        $('btnDirect').classList.remove('hidden');
+      }
+    }, 15000);
+  }
+
+  /* ---------- Tombol "Pasang" (Android/Chrome) & petunjuk iPhone ---------- */
+  const standalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+  const ditutup = (() => { try { return localStorage.getItem('pwa_install_closed') === '1'; } catch (e) { return false; } })();
+  let promptEvent = null;
+
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    promptEvent = e;
+    if (!standalone && !ditutup) $('installBar').style.display = 'flex';
+  });
+  $('btnInstall').onclick = async () => {
+    if (!promptEvent) return;
+    promptEvent.prompt();
+    await promptEvent.userChoice;
+    promptEvent = null;
+    $('installBar').style.display = 'none';
+  };
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  if (isIOS && !standalone && !ditutup) {
+    $('installText').innerHTML = '<b>Pasang di iPhone</b><br>Tekan <b>Bagikan</b> ⬆️ lalu <b>"Tambah ke Layar Utama"</b>';
+    $('btnInstall').classList.add('hidden');
+    $('installBar').style.display = 'flex';
+  }
+  function tutupInstall(){
+    $('installBar').style.display = 'none';
+    try { localStorage.setItem('pwa_install_closed', '1'); } catch (e) {}
+  }
+
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+</script>
+</body>
+</html>
