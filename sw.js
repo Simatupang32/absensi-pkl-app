@@ -1,10 +1,10 @@
 // Service worker sederhana: menyimpan tampilan pembuka & ikon agar aplikasi bisa dipasang
 // dan terbuka cepat. Data absensi tetap selalu diambil langsung dari Google Apps Script.
-const CACHE = 'absensi-pkl-v1';
+const CACHE = 'absensi-pkl-v2';
 const FILES = [
   './', './index.html', './manifest.webmanifest',
-  './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png',
-  './icons/apple-touch-icon.png', './icons/favicon-32.png', './icons/logo.png'
+  './icon-192.png', './icon-512.png', './maskable-512.png',
+  './apple-touch-icon.png', './favicon-32.png', './logo.png'
 ];
 
 self.addEventListener('install', e => {

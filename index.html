@@ -7,8 +7,8 @@
 
 <!-- Ikon & tampilan saat dipasang di HP -->
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="theme-color" content="#1d4ed8">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -51,7 +51,7 @@
 <body>
 
 <div id="splash">
-  <img src="icons/logo.png" alt="Logo">
+  <img src="logo.png" alt="" onerror="this.style.visibility='hidden'">
   <div class="t">Absensi PKL</div>
   <div class="s" id="splashMsg">Memuat aplikasi…</div>
   <div class="spin" id="spin"></div>
@@ -63,7 +63,7 @@
   allowfullscreen></iframe>
 
 <div id="installBar">
-  <img src="icons/icon-192.png" alt="">
+  <img src="icon-192.png" alt="">
   <div class="x" id="installText"><b>Pasang Absensi PKL</b><br>Tambahkan ke layar utama HP</div>
   <button class="btn" id="btnInstall">Pasang</button>
   <button class="close" onclick="tutupInstall()" aria-label="Tutup">×</button>
