@@ -25,103 +25,74 @@
 
 <style>
   *{box-sizing:border-box}
-  html,body{margin:0;height:100%;background:#eef1f5;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
-  #app{position:fixed;inset:0;width:100%;height:100%;border:0;
-       padding-top:env(safe-area-inset-top,0);background:#eef1f5}
-  #splash{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
-          background:#fff;z-index:5;transition:opacity .35s}
-  #splash img{width:150px;height:150px}
-  #splash .t{margin-top:10px;font-weight:700;font-size:18px;color:#1e3a8a}
-  #splash .s{margin-top:6px;font-size:13px;color:#6b7280;text-align:center;padding:0 24px}
-  .spin{width:28px;height:28px;margin-top:18px;border:3px solid #dbeafe;border-top-color:#1d4ed8;border-radius:50%;animation:r 1s linear infinite}
+  html,body{margin:0;min-height:100%;background:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#1f2937}
+  .wrap{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center}
+  .wrap img{width:160px;height:160px}
+  h1{margin:6px 0 4px;font-size:22px;color:#1e3a8a}
+  .s{font-size:14px;color:#6b7280;max-width:340px}
+  .btn{display:block;width:100%;max-width:320px;margin-top:12px;padding:14px 18px;border-radius:12px;border:0;
+       background:#1d4ed8;color:#fff;text-decoration:none;font-weight:700;font-size:16px;cursor:pointer}
+  .btn.ghost{background:#eef2ff;color:#1d4ed8}
+  .ios{margin-top:16px;max-width:340px;background:#f3f4f6;border-radius:12px;padding:12px 14px;font-size:14px;text-align:left;line-height:1.5}
+  .spin{width:28px;height:28px;margin:18px auto 0;border:3px solid #dbeafe;border-top-color:#1d4ed8;border-radius:50%;animation:r 1s linear infinite}
   @keyframes r{to{transform:rotate(360deg)}}
-  .btn{display:inline-block;margin-top:14px;padding:11px 18px;border-radius:10px;background:#1d4ed8;color:#fff;
-       text-decoration:none;font-weight:600;font-size:14px;border:0}
-  .btn.ghost{background:#e5e7eb;color:#111827}
-  #installBar{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0));z-index:6;
-     display:none;align-items:center;gap:10px;background:#fff;border-radius:14px;padding:10px 12px;
-     box-shadow:0 6px 24px rgba(0,0,0,.18);font-size:14px}
-  #installBar img{width:40px;height:40px;border-radius:9px}
-  #installBar .x{flex:1}
-  #installBar .btn{margin:0;padding:9px 14px}
-  #installBar .close{background:none;border:0;font-size:20px;color:#6b7280;cursor:pointer}
   .hidden{display:none!important}
 </style>
 </head>
 <body>
-
-<div id="splash">
+<div class="wrap">
   <img src="logo.png" alt="" onerror="this.style.visibility='hidden'">
-  <div class="t">Absensi PKL</div>
-  <div class="s" id="splashMsg">Memuat aplikasi…</div>
-  <div class="spin" id="spin"></div>
-  <a id="btnDirect" class="btn hidden" href="#">Buka Aplikasi</a>
-</div>
+  <h1>Absensi PKL</h1>
+  <div class="s" id="msg">Absensi siswa PKL dengan selfie &amp; lokasi.</div>
+  <div class="spin hidden" id="spin"></div>
 
-<iframe id="app" title="Absensi PKL"
-  allow="camera *; geolocation *; microphone *; clipboard-write *; fullscreen *"
-  allowfullscreen></iframe>
-
-<div id="installBar">
-  <img src="icon-192.png" alt="">
-  <div class="x" id="installText"><b>Pasang Absensi PKL</b><br>Tambahkan ke layar utama HP</div>
-  <button class="btn" id="btnInstall">Pasang</button>
-  <button class="close" onclick="tutupInstall()" aria-label="Tutup">×</button>
+  <a id="btnOpen" class="btn" href="#">Buka Absensi</a>
+  <button id="btnInstall" class="btn ghost hidden">📲 Pasang di HP</button>
+  <div id="iosHelp" class="ios hidden">
+    <b>Pasang di iPhone:</b><br>
+    1. Tekan tombol <b>Bagikan</b> ⬆️ di Safari<br>
+    2. Pilih <b>"Tambah ke Layar Utama"</b><br>
+    3. Tekan <b>Tambah</b>
+  </div>
 </div>
 
 <script>
   const $ = id => document.getElementById(id);
   const belumDiisi = APP_URL.indexOf('GANTI_DENGAN') >= 0;
-  $('btnDirect').href = APP_URL;
+  $('btnOpen').href = APP_URL;
+
+  // Dibuka dari ikon di layar utama (sudah terpasang) -> langsung masuk ke aplikasi absensi
+  const standalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
 
   if (belumDiisi) {
-    $('spin').classList.add('hidden');
-    $('splashMsg').innerHTML = 'URL aplikasi belum diisi.<br>Buka <b>index.html</b> lalu ganti <b>APP_URL</b> dengan URL Web App Apps Script.';
-  } else {
-    const frame = $('app');
-    let loaded = false;
-    frame.addEventListener('load', () => {
-      loaded = true;
-      $('splash').style.opacity = '0';
-      setTimeout(() => $('splash').classList.add('hidden'), 400);
-    });
-    frame.src = APP_URL;
-    // Jika lama sekali / diblokir, tawarkan buka langsung
-    setTimeout(() => {
-      if (!loaded) {
-        $('splashMsg').textContent = 'Koneksi lambat atau aplikasi tidak bisa dimuat di sini.';
-        $('btnDirect').classList.remove('hidden');
-      }
-    }, 15000);
+    $('msg').innerHTML = 'URL aplikasi belum diisi.<br>Ganti <b>APP_URL</b> di index.html dengan URL Web App Apps Script.';
+    $('btnOpen').classList.add('hidden');
+  } else if (standalone) {
+    $('msg').textContent = 'Membuka aplikasi…';
+    $('btnOpen').classList.add('hidden');
+    $('spin').classList.remove('hidden');
+    location.replace(APP_URL);
   }
 
-  /* ---------- Tombol "Pasang" (Android/Chrome) & petunjuk iPhone ---------- */
-  const standalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
-  const ditutup = (() => { try { return localStorage.getItem('pwa_install_closed') === '1'; } catch (e) { return false; } })();
+  // Tombol pasang (Android / Chrome / Edge)
   let promptEvent = null;
-
   window.addEventListener('beforeinstallprompt', e => {
-    e.preventDefault();
-    promptEvent = e;
-    if (!standalone && !ditutup) $('installBar').style.display = 'flex';
+    e.preventDefault(); promptEvent = e;
+    if (!standalone) $('btnInstall').classList.remove('hidden');
   });
   $('btnInstall').onclick = async () => {
     if (!promptEvent) return;
     promptEvent.prompt();
     await promptEvent.userChoice;
     promptEvent = null;
-    $('installBar').style.display = 'none';
-  };
-  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-  if (isIOS && !standalone && !ditutup) {
-    $('installText').innerHTML = '<b>Pasang di iPhone</b><br>Tekan <b>Bagikan</b> ⬆️ lalu <b>"Tambah ke Layar Utama"</b>';
     $('btnInstall').classList.add('hidden');
-    $('installBar').style.display = 'flex';
-  }
-  function tutupInstall(){
-    $('installBar').style.display = 'none';
-    try { localStorage.setItem('pwa_install_closed', '1'); } catch (e) {}
-  }
+  };
+  window.addEventListener('appinstalled', () => {
+    $('msg').textContent = '✅ Terpasang! Buka "Absensi PKL" dari layar utama HP.';
+  });
+
+  // Petunjuk iPhone (Safari tidak punya tombol pasang otomatis)
+  if (/iphone|ipad|ipod/i.test(navigator.userAgent) && !standalone) $('iosHelp').classList.remove('hidden');
 
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 </script>
